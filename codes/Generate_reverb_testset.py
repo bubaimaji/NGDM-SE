@@ -1,33 +1,6 @@
 """
 generate_reverb_testset.py
-
-Generates reverberant test sets, following the methodology the EARS dataset
-paper itself describes (Richter et al., "EARS: An Anechoic Fullband Speech
-Dataset Benchmarked for Speech Enhancement and Dereverberation"):
-
-  1. Convolve CLEAN speech (not the already-mixed noisy signal) with a real
-     RIR.
-  2. Trim the RIR to start at its peak-amplitude index BEFORE convolving,
-     to avoid a systematic time delay between the reverberant signal and
-     its clean reference (their exact stated fix, quoted directly from
-     the paper -- otherwise alignment-sensitive metrics like PESQ/STOI are
-     unfairly penalized by a delay that has nothing to do with model
-     quality).
-  3. Mix the reverberant clean speech with noise at your existing target
-     SNR levels (reusing your project's existing SNR-mixing convention).
-
-NOTE ON VOICEBANK-DEMAND: that dataset ships pre-mixed (no separate
-clean/noise available to reverberate independently), so for THAT dataset
-only, we fall back to convolving the already-mixed signal directly
-(mathematically valid under the simplifying assumption that speech and
-noise share one acoustic path) -- flagged explicitly as a necessary
-simplification for that dataset, not the primary/preferred method.
-
-Usage:
-    pip install soundfile numpy scipy --break-system-packages   # if needed
-    python generate_reverb_testset.py
 """
-
 import os
 import random
 import numpy as np
@@ -36,12 +9,8 @@ from scipy.signal import fftconvolve
 
 SR = 16000
 
-# =====================================================
-# CONFIG -- Mode 1: EARS test set (proper methodology: convolve clean
-# speech + noise SEPARATELY, matching the EARS paper's own approach)
-# =====================================================
 
-MODE = "voicebank_demand"   # or "voicebank_demand"
+MODE = "ears"   
 
 EARS_CLEAN_TEST_DIR = "/home/bubai-maji/speech_enhancement/data/mixtures/musan/test/clean"
 EARS_NOISE_DIR = "/home/bubai-maji/speech_enhancement/data/noise/musan"   # your existing noise source
@@ -49,21 +18,9 @@ SNR_LEVELS = [2.5, 7.5, 12.5, 17.5]   # matches your existing test-set SNR proto
 
 OUTPUT_ROOT_EARS = "/home/bubai-maji/speech_enhancement/data/mixtures_reverb/ears_musan/test"
 
-# =====================================================
-# CONFIG -- Mode 2: VoiceBank-DEMAND (necessary simplification: convolve
-# the already-mixed signal, since separate clean/noise isn't available)
-# =====================================================
 
-VB_MIX_DIR = "/home/bubai-maji/speech_enhancement/data/voicebank_demand/test/mix"
-VB_CLEAN_DIR = "/home/bubai-maji/speech_enhancement/data/voicebank_demand/test/clean"
-OUTPUT_ROOT_VB = "/home/bubai-maji/speech_enhancement/data/mixtures_reverb/voicebank_demand/test"
 
 RIR_ROOT = "/home/bubai-maji/speech_enhancement/data/RIRS_NOISES/real_rirs_isotropic_noises"
-# IMPORTANT: RIRS_NOISES also contains pointsource_noises (actual noise
-# recordings, NOT impulse responses) and simulated_rirs (simulated, not
-# real). Pointing specifically at real_rirs_isotropic_noises ensures only
-# genuine REAL recorded RIRs are used, matching the EARS paper's stated
-# methodology exactly.
 
 random.seed(42)
 np.random.seed(42)
@@ -163,15 +120,7 @@ def run_ears(rir_files):
             noise = np.tile(noise, int(np.ceil(len(reverb_clean) / len(noise))))
         noise = noise[:len(reverb_clean)]
 
-        # CRITICAL FIX: scale noise using the DRY clean signal's RMS, not
-        # reverb_clean's RMS. Reverberant tails inflate RMS by an
-        # unpredictable, per-RIR amount (confirmed: 5-15x higher, varying
-        # per utterance) -- scaling noise against that inflated, erratic
-        # RMS decouples the ACTUAL achieved SNR from the intended target
-        # entirely (verified: labeled 17.5dB mixtures measured as low as
-        # 2.87dB actual SNR). Scaling against the stable, pre-reverb dry
-        # RMS keeps the intended degradation level meaningful and
-        # comparable to the non-reverb condition.
+    
         snr = random.choice(SNR_LEVELS)
         dry_clean_rms = rms(clean)
         noise_rms = rms(noise)
@@ -192,7 +141,7 @@ def run_ears(rir_files):
 
 
 # =====================================================
-# Mode 2: VoiceBank-DEMAND -- necessary simplification (pre-mixed source)
+# Mode 2: VoiceBank-DEMAND 
 # =====================================================
 
 def run_voicebank_demand(rir_files):
