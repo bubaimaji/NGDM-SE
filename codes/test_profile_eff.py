@@ -1,26 +1,3 @@
-"""
-profile_efficiency.py
-
-Standalone efficiency profiler -- addresses the meta-reviewer's request to
-"add MAC/FLOPs/RTF figures". This is intentionally decoupled from
-train.py: it does not need a trained checkpoint (FLOPs/params depend only
-on architecture + input shape, not weight values), so you can run this in
-parallel with training, today, for every model in the study.
-
-Produces one row per model with:
-    - Params (M)
-    - MACs / FLOPs (G) for a fixed reference input length
-    - RTF on GPU  (inference_time / audio_duration; lower is better; <1 = faster than real time)
-    - RTF on CPU
-    - Peak GPU memory during inference (MB)
-
-Usage:
-    pip install thop --break-system-packages   # if not already installed
-    python profile_efficiency.py
-
-Add/remove models in the MODELS_TO_PROFILE list at the bottom.
-"""
-
 import time
 import statistics
 import sys
