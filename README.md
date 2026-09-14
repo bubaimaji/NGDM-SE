@@ -4,3 +4,6 @@ This repo contains the implementation of the NGDM-SE: Noise-Guided Dual-Memory x
 
 # Model #
 ![Description of the image](images/SE.png)
+
+# Test Audio example and Saved Model Weights #
+The test audio samples on the reverb. and out-of-domain datasets can be found [here](Test_samples/).
