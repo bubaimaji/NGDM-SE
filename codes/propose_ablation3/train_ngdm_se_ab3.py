@@ -21,7 +21,7 @@ torch.backends.cudnn.benchmark = True
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "6"   # <-- CONFIRM free: nvidia-smi --query-gpu=index,memory.used,utilization.gpu --format=csv
+os.environ["CUDA_VISIBLE_DEVICES"] = "6"   
 
 DEVICE = torch.device("cuda:0")
 print("GPU:", torch.cuda.get_device_name(0))
@@ -34,7 +34,7 @@ print("GPU:", torch.cuda.get_device_name(0))
 SR = 16000
 BATCH_SIZE = 8       # fast backbone (time-only mLSTM + cheap standard
                       # attention for freq-context) -- no gradient
-                      # accumulation needed, same as the original 17.27dB run
+                    
 EPOCHS = 50
 LR = 2e-4
 LOG_EVERY = 50
