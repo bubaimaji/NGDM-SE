@@ -1,27 +1,4 @@
-"""
-ngdm_se_fast_dense.py
-
-Combines: DenseEncoder + MagDecoder (proven components from MPSENet) with
-GENUINE dual time-only xLSTM branches (the fast, proven mechanism from
-ngdm_se_improved.py -- NOT TFxLSTMBlock, which is slow).
-
-HONEST TRADE-OFF, READ BEFORE TRAINING:
-DenseEncoder only reduces FREQUENCY (not time). MagDecoder only restores
-FREQUENCY (not time) -- it assumes T is preserved throughout. This means,
-unlike the original fast backbone (which reduced TIME 4x via CNNEncoder),
-this version processes the FULL time sequence length through the xLSTM
-branches, not a 4x-reduced one.
-
-This means per-step cost will likely be HIGHER than your fastest previous
-version (the CNNEncoder-based one), because sequence length is longer.
-It should still be much faster than TFxLSTMBlock (time+freq mLSTM), since
-only ONE axis (time) uses the custom mLSTM cell, not both.
-
-VERIFY ACTUAL SPEED YOURSELF before committing to a full training run --
-do not assume this is faster without checking the real ms/step number.
-
-Ablation flags: use_noise_routing, use_dual_memory, use_attention_fusion
-"""
+# this repo contain the code for our NDGM-SE model..
 
 import math
 import torch
@@ -53,7 +30,6 @@ def mag_phase_istft(mag, pha, n_fft=N_FFT, hop_size=HOP, win_size=WIN, compress_
     return torch.istft(com, n_fft, hop_length=hop_size, win_length=win_size, window=hann, center=center)
 
 
-# ============ verified fast mLSTM core (unchanged from ngdm_se_improved.py) ============
 
 def small_init_(p, dim):
     torch.nn.init.normal_(p, mean=0.0, std=math.sqrt(2/(5*dim)))
@@ -174,7 +150,7 @@ class MLSTMCore(nn.Module):
         return self.proj_down(h)
 
 class XLSTMBlock(nn.Module):
-    """dim -> dim, [B,S,D], TIME-AXIS ONLY -- the proven fast mechanism."""
+    """dim -> dim, [B,S,D], TIME-AXIS ONLY --fast mechanism."""
     def __init__(self, dim):
         super().__init__()
         self.norm = nn.LayerNorm(dim)
@@ -182,8 +158,6 @@ class XLSTMBlock(nn.Module):
     def forward(self, x):
         return x + self.core(self.norm(x))
 
-
-# ============ Codec (verbatim from mpsenet.py) ============
 
 class LearnableSigmoid2D(nn.Module):
     def __init__(self, in_features, beta=1):
@@ -198,12 +172,7 @@ def get_padding_2d(k, d=(1,1)):
 
 class DenseBlock(nn.Module):
     def __init__(self, hid, kernel_size=(3,3), depth=2):   # depth reduced 4->2 to cut MACs
-                                                              # NOTE: this is a real trade-off,
-                                                              # not free -- depth contributes to
-                                                              # DenseBlock's representational
-                                                              # capacity. Verify performance
-                                                              # doesn't drop meaningfully before
-                                                              # keeping this.
+                                                                                                                  
         super().__init__()
         self.depth = depth
         self.blocks = nn.ModuleList()
@@ -394,4 +363,4 @@ if __name__ == "__main__":
     print(f"Params: {sum(p.numel() for p in m4.parameters())/1e6:.3f} M")
     assert m4(x).shape == x.shape
 
-    print("\nAll variants OK.")
+    print("\nAll model variants.")
