@@ -6,7 +6,7 @@ This repo contains the implementation of the NGDM-SE: Noise-Guided Dual-Memory x
 ![Description of the image](images/SE.png)
 
 # Test Audio example and Saved Model Weights #
-The test audio samples on the reverb. and out-of-domain datasets can be found [here](test_audio_samples/).
+The audio samples on the reverb. and out-of-domain test can be found [here](test_audio_samples/).
 
 # Datasets #
 To download and extract the dataset is available here: [EARS Data](https://sp-uhh.github.io/ears_dataset/) and [VoiceBAnk+Demands](https://huggingface.co/datasets/JacobLinCool/VoiceBank-DEMAND-16k) and MUSAN Noise Data can be found [here](https://www.openslr.org/17/)
